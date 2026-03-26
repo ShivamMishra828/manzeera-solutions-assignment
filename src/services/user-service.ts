@@ -1,9 +1,9 @@
 import UserRepository from '../repositories/user-repository';
-import { CreateUserInput } from '../interfaces';
+import { CreateUserInput, UserSignInInput, UserSignInOutput } from '../interfaces';
 import { IUser } from '../models/user-model';
 import AppError from '../utils/app-error';
 import { StatusCodes } from 'http-status-codes';
-import { hashPassword } from '../utils/helper';
+import { comparePassword, generateToken, hashPassword } from '../utils/helper';
 
 class UserService {
     private userRepository: UserRepository;
@@ -39,6 +39,47 @@ class UserService {
             } else {
                 throw new AppError(
                     'An unexpected server error occurred during signup',
+                    StatusCodes.INTERNAL_SERVER_ERROR,
+                    'INTERNAL_SERVER_ERROR',
+                );
+            }
+        }
+    }
+
+    async signin(userData: UserSignInInput): Promise<UserSignInOutput> {
+        try {
+            const user = await this.userRepository.findUserByEmailWithPassword(userData.email);
+
+            if (!user) {
+                throw new AppError(
+                    'User with this email does not exist',
+                    StatusCodes.NOT_FOUND,
+                    'USER_NOT_FOUND',
+                );
+            }
+
+            const isPasswordValid: boolean = await comparePassword(
+                userData.password,
+                user.password,
+            );
+
+            if (!isPasswordValid) {
+                throw new AppError(
+                    'Invalid credentials. Please check your email and password',
+                    StatusCodes.UNAUTHORIZED,
+                    'INVALID_CREDENTIALS',
+                );
+            }
+
+            const token: string = generateToken(user._id);
+
+            return { user, token };
+        } catch (err: unknown) {
+            if (err instanceof AppError) {
+                throw err;
+            } else {
+                throw new AppError(
+                    'An unexpected server error occurred during signin',
                     StatusCodes.INTERNAL_SERVER_ERROR,
                     'INTERNAL_SERVER_ERROR',
                 );
