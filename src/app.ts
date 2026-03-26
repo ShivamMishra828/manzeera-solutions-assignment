@@ -5,6 +5,7 @@ import { StatusCodes } from 'http-status-codes';
 import cookieParser from 'cookie-parser';
 import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit';
 import globalErrorHandler from './middlewares/global-error-handler';
+import apiRoutes from './routes';
 
 const app: Express = express();
 
@@ -43,6 +44,8 @@ app.get('/health', async (_req: Request, res: Response): Promise<void> => {
         timestamp: new Date().toISOString(),
     });
 });
+
+app.use('/api', apiRoutes);
 
 app.use(globalErrorHandler);
 
