@@ -17,7 +17,7 @@ const serverConfig = Object.freeze(
             default: 'info',
         }),
         NODE_ENV: str({
-            choices: ['production', 'development', 'test'],
+            choices: ['production', 'development', 'testing'],
             default: 'development',
         }),
         JWT_SECRET: str(),
